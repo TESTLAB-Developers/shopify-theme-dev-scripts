@@ -1,0 +1,61 @@
+#!/bin/bash
+
+display_usage() { 
+  echo "Open Shopify frontend for developer store or specific theme in the browser." >/dev/tty
+	echo -e "Usage:\n$0 -h | [theme_id] [store]" >/dev/tty
+	}
+ 
+display_help() { 
+  display_usage
+	echo "Options:"
+	#echo -e " -v \tVerbose mode."
+	#echo -e " -d \tDry-run mode."
+	echo -e " -h \tPrint this help message."
+	echo ""
+	}
+
+#verbose='false'
+hflag='false'
+#dflag='false'
+
+while getopts 'h' flag; do
+  case "${flag}" in
+    #v) verbose='true' ;;
+    h) hflag='true' ;;
+    #d) dflag='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+if [ "$hflag" == "true" ]; then
+    display_help
+    exit 0
+fi
+
+themeId=""
+storeUrl=""
+if test "$#" -gt 2; then
+    echo -e "Unexpected arguments after '${@:$OPTIND+1:1}': ${@:$OPTIND+2}\n" >&2
+    display_usage
+    echo ""
+    exit 1
+elif test "$#" -gt 1; then
+    themeId=${@:$OPTIND:1}
+    storeUrl=${@:$OPTIND+1:1}
+elif [ "$#" -eq 1 ]; then
+    themeId=${@:$OPTIND:1}
+fi 
+
+if [ -z "${themeId}" ]; then
+  echo "Opening developer theme preview..."
+  #shopify theme open -d -s indoorgolfoutlet-dev
+  shopify theme open -d
+else
+  echo "Opening $themeId theme preview..."
+  #shopify theme open -t $themeId -s indoorgolfoutlet-dev
+  if [ -z "${storeUrl}" ]; then
+    shopify theme open -t $themeId
+  else
+    shopify theme open -t $themeId -s $storeUrl
+  fi
+fi

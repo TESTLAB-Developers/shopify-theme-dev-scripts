@@ -1,0 +1,60 @@
+#!/bin/bash
+
+display_usage() { 
+	echo "Beautify a Shopify JSON file by using jq to expand (and escape slashes)." >/dev/tty
+	echo -e "Usage:\n$0 -h | [-v] <filename>" >/dev/tty
+	}
+ 
+display_help() { 
+  display_usage
+	echo "Options:"
+	#echo -e " -v \tVerbose mode."
+	echo -e " -h \tPrint this help message."
+	echo ""
+	}
+
+verbose='false'
+hflag='false'
+
+while getopts 'h' flag; do
+  case "${flag}" in
+    #v) verbose='true' ;;
+    h) hflag='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+if [ "$hflag" == "true" ]; then
+    display_help
+    exit 0
+fi
+
+# Count positional arguments left
+let "posArgCount = $# + 1 - $OPTIND" 1
+
+filename=""
+
+if [ "$posArgCount" -gt 1 ]; then
+    echo -e "Unexpected arguments after '${@:$OPTIND:1}': ${@:$OPTIND+1}\n" >&2
+    display_usage
+    echo ""
+    exit 1
+elif [ "$posArgCount" -gt 0 ]; then
+    filename=${@:$OPTIND:1}
+else
+    echo -e "Too few arguments given: expected 1 argument\n" >&2
+    display_usage
+    echo ""
+    exit 1
+fi 
+
+if [ ! -f "$filename" ]; then
+    echo "Could not find file: $filename"
+    exit 1
+fi
+
+# Beautify JSON file
+jq '.' ${filename} >${filename}
+
+# Escape all forward slashses
+sed -i 's@/@\\/@g' ${filename}

@@ -1,0 +1,54 @@
+#!/bin/bash
+
+display_usage() { 
+  echo "Run Shopify development theme server for a specific store from current directory." >/dev/tty
+	echo -e "Usage:\n$0 -h | [store]" >/dev/tty
+	}
+ 
+display_help() { 
+  display_usage
+	echo "Options:"
+	#echo -e " -v \tVerbose mode."
+	#echo -e " -d \tDry-run mode."
+	echo -e " -h \tPrint this help message."
+	echo ""
+	}
+
+#verbose='false'
+hflag='false'
+#dflag='false'
+
+while getopts 'h' flag; do
+  case "${flag}" in
+    #v) verbose='true' ;;
+    h) hflag='true' ;;
+    #d) dflag='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+if [ "$hflag" == "true" ]; then
+    display_help
+    exit 0
+fi
+
+# Count positional arguments left
+let "posArgCount = $# + 1 - $OPTIND" 1
+
+storeUrl=""
+
+if [ "$posArgCount" -gt 1 ]; then
+    echo -e "Unexpected arguments ${@:$OPTIND:1}': ${@:$OPTIND+1}\n" >&2
+    display_usage
+    echo ""
+    exit 1
+elif [ "$posArgCount" -gt 0 ]; then
+    storeUrl=${@:$OPTIND:1}
+fi 
+
+
+if [ -z "${storeUrl}" ]; then
+  shopify theme dev  --live-reload=full-page --theme-editor-sync
+else
+  shopify theme dev  --live-reload=full-page --theme-editor-sync -s "${storeUrl}"
+fi

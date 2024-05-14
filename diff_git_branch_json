@@ -1,0 +1,77 @@
+#!/bin/bash
+
+display_usage() { 
+	echo "Compare a JSON file between 2 branches in the git repo by checking the file out from both and using jq to expand and vimdiff to compare the two." >/dev/tty
+	echo -e "Usage:\n$0 -h | [-v] <a_branch> <b_branch> <filename>" >/dev/tty
+	}
+ 
+display_help() { 
+  display_usage
+	echo "Options:"
+	echo -e " -v \tVerbose mode."
+	#echo -e " -d \tDry-run mode."
+	echo -e " -h \tPrint this help message."
+	echo ""
+	}
+
+verbose='false'
+hflag='false'
+#dflag='false'
+
+while getopts 'vhd' flag; do
+  case "${flag}" in
+    v) verbose='true' ;;
+    h) hflag='true' ;;
+    #d) dflag='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+if [ "$hflag" == "true" ]; then
+    display_help
+    exit 0
+fi
+
+# Count positional arguments left
+let "posArgCount = $# + 1 - $OPTIND" 1
+
+aBranchName=""
+bBranchName=""
+filename=""
+
+if [ "$posArgCount" -gt 3 ]; then
+    echo -e "Unexpected arguments after '${@:$OPTIND+2:1}': ${@:$OPTIND+3}\n" >&2
+    display_usage
+    echo ""
+    exit 1
+elif [ "$posArgCount" -gt 2 ]; then
+    aBranchName=${@:$OPTIND:1}
+    bBranchName=${@:$OPTIND+1:1}
+    filename=${@:$OPTIND+2:1}
+else
+    echo -e "Too few arguments given: expected 3 arguments\n" >&2
+    display_usage
+    echo ""
+    exit 1
+fi 
+
+if [ ! -f "$filename" ]; then
+    echo "Could not find file: $filename"
+    exit 1
+fi
+
+fileDir="$(dirname "${filename}")"
+filenameBase="$(basename "${filename}" .json)"
+
+newAFilename="${fileDir}/${filenameBase}_${aBranchName}.json"
+newBFilename="${fileDir}/${filenameBase}_${bBranchName}.json"
+
+git show ${aBranchName}:${filename} | jq '.' > $newAFilename
+git show ${bBranchName}:${filename} | jq '.' > $newBFilename
+
+# Escape all forward slashses
+sed -i 's@/@\\/@g' $newAFilename
+sed -i 's@/@\\/@g' $newBFilename
+
+echo "Comparing ${filename} between ${aBranchName}..${bBranchName}..."
+vimdiff $newAFilename $newBFilename
