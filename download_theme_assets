@@ -1,0 +1,71 @@
+#!/bin/bash
+
+THEME_ASSET_FILENAME="theme_asset_paths.txt"
+
+display_usage() { 
+	echo "Find and download all theme assets from within a theme repository by replacing 'shopify://shop_images/' with the <shop_url>." >/dev/tty
+	echo -e "Usage:\n$0 -h | [-v] <shop_url> <output_folder>" >/dev/tty
+	}
+ 
+display_help() { 
+  display_usage
+	echo "Options:"
+	#echo -e " -v \tVerbose mode."
+	echo -e " -h \tPrint this help message."
+	echo ""
+	}
+
+verbose='false'
+hflag='false'
+
+while getopts 'vh' flag; do
+  case "${flag}" in
+    v) verbose='true' ;;
+    h) hflag='true' ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+if [ "$hflag" == "true" ]; then
+    display_help
+    exit 0
+fi
+
+# Count positional arguments left
+let "posArgCount = $# + 1 - $OPTIND" 1
+
+shop_url=""
+output_folder=""
+
+if [ "$posArgCount" -gt 2 ]; then
+    echo -e "Unexpected arguments after '${@:$OPTIND+1:1}': ${@:$OPTIND+2}\n" >&2
+    display_usage
+    echo ""
+    exit 1
+elif [ "$posArgCount" -eq 2 ]; then
+    shop_url=${@:$OPTIND:1}
+    output_folder=${@:$OPTIND+1:1}
+else
+    echo -e "Too few arguments given: expected 2 argument\n" >&2
+    display_usage
+    echo ""
+    exit 1
+fi 
+
+if [ -d "$filename" ]; then
+    echo "Output directory already exists: $output_folder"
+    exit 1
+fi
+theme_asset_download_folder="theme_asset_files" # inside of media_export/
+asset_prefix="https://indoorgolfoutlet.com"
+
+mkdir -p ${output_folder}
+grep -ohri 'shopify:\\/\\/shop_images\\/[^"]*' > "${output_folder}/${THEME_ASSET_FILENAME}"
+cd ${output_folder}
+sed -i 's@\\@@g' $THEME_ASSET_FILENAME
+sed -i "s@shopify://shop_images@${shop_url}/cdn/shop/files@g" ${THEME_ASSET_FILENAME}
+wget -i $THEME_ASSET_FILENAME -P ./
+
+
+
+
