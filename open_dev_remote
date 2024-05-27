@@ -2,27 +2,27 @@
 
 display_usage() { 
   echo "Open Shopify frontend for developer store or specific theme in the browser." >/dev/tty
-	echo -e "Usage:\n$0 -h | [theme_id] [store]" >/dev/tty
+	echo -e "Usage:\n$0 -h | -d | [theme_id] [store]" >/dev/tty
 	}
  
 display_help() { 
   display_usage
 	echo "Options:"
 	#echo -e " -v \tVerbose mode."
-	#echo -e " -d \tDry-run mode."
+	echo -e " -d \tUse development environment defined in shopify.theme.toml"
 	echo -e " -h \tPrint this help message."
 	echo ""
 	}
 
 #verbose='false'
 hflag='false'
-#dflag='false'
+dflag='false'
 
-while getopts 'h' flag; do
+while getopts 'hd' flag; do
   case "${flag}" in
     #v) verbose='true' ;;
     h) hflag='true' ;;
-    #d) dflag='true' ;;
+    d) dflag='true' ;;
     *) error "Unexpected option ${flag}" ;;
   esac
 done
@@ -46,7 +46,9 @@ elif [ "$#" -eq 1 ]; then
     themeId=${@:$OPTIND:1}
 fi 
 
-if [ -z "${themeId}" ]; then
+if [ "$dflag" == "true" ]; then
+  shopify theme open -d -e development
+elif [ -z "${themeId}" ]; then
   echo "Opening developer theme preview..."
   #shopify theme open -d -s indoorgolfoutlet-dev
   shopify theme open -d

@@ -2,27 +2,27 @@
 
 display_usage() { 
   echo "Run Shopify development theme server for a specific store from current directory." >/dev/tty
-	echo -e "Usage:\n$0 -h | [store]" >/dev/tty
+	echo -e "Usage:\n$0 -h | -d | [store]" >/dev/tty
 	}
  
 display_help() { 
   display_usage
 	echo "Options:"
 	#echo -e " -v \tVerbose mode."
-	#echo -e " -d \tDry-run mode."
+	echo -e " -d \tUse development environment defined in shopify.theme.toml"
 	echo -e " -h \tPrint this help message."
 	echo ""
 	}
 
 #verbose='false'
 hflag='false'
-#dflag='false'
+dflag='false'
 
-while getopts 'h' flag; do
+while getopts 'hd' flag; do
   case "${flag}" in
     #v) verbose='true' ;;
     h) hflag='true' ;;
-    #d) dflag='true' ;;
+    d) dflag='true' ;;
     *) error "Unexpected option ${flag}" ;;
   esac
 done
@@ -47,7 +47,9 @@ elif [ "$posArgCount" -gt 0 ]; then
 fi 
 
 
-if [ -z "${storeUrl}" ]; then
+if [ "$dflag" == "true" ]; then
+  shopify theme dev  --live-reload=full-page --theme-editor-sync -e development
+elif [ -z "${storeUrl}" ]; then
   shopify theme dev  --live-reload=full-page --theme-editor-sync
 else
   shopify theme dev  --live-reload=full-page --theme-editor-sync -s "${storeUrl}"

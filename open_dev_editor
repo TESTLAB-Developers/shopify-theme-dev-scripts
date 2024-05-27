@@ -2,7 +2,7 @@
 
 display_usage() { 
   echo "Open the Shopify admin editor for the development theme." >/dev/tty
-	echo -e "Usage:\n$0 -h | [store]" >/dev/tty
+	echo -e "Usage:\n$0 -h | -d | [store]" >/dev/tty
 	}
  
 display_help() { 
@@ -10,19 +10,20 @@ display_help() {
 	echo "Options:"
 	#echo -e " -v \tVerbose mode."
 	#echo -e " -d \tDry-run mode."
+	echo -e " -d \tUse development environment defined in shopify.theme.toml"
 	echo -e " -h \tPrint this help message."
 	echo ""
 	}
 
 #verbose='false'
 hflag='false'
-#dflag='false'
+dflag='false'
 
-while getopts 'h' flag; do
+while getopts 'dh' flag; do
   case "${flag}" in
     #v) verbose='true' ;;
     h) hflag='true' ;;
-    #d) dflag='true' ;;
+    d) dflag='true' ;;
     *) error "Unexpected option ${flag}" ;;
   esac
 done
@@ -46,7 +47,9 @@ elif [ "$posArgCount" -gt 0 ]; then
     storeUrl=${@:$OPTIND:1}
 fi 
 
-if [ -z "${storeUrl}" ]; then
+if [ "$dflag" == "true" ]; then
+  shopify theme open --editor -d -e development
+elif [ -z "${storeUrl}" ]; then
   shopify theme open --editor -d
 else
   shopify theme open --editor -d -s "${storeUrl}"
