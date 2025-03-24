@@ -10,16 +10,19 @@ display_help() {
 	echo "Options:"
 	#echo -e " -v \tVerbose mode."
 	echo -e " -h \tPrint this help message."
+	echo -e " -x \tDon't escape forward slashes with: '\\'"
 	echo ""
 	}
 
 verbose='false'
 hflag='false'
+xflag='false'
 
-while getopts 'h' flag; do
+while getopts 'hx' flag; do
   case "${flag}" in
     #v) verbose='true' ;;
     h) hflag='true' ;;
+    x) xflag='true' ;;
     *) error "Unexpected option ${flag}" ;;
   esac
 done
@@ -58,7 +61,15 @@ filenameBase="$(basename "${filename}" .json)"
 filenameNew="${fileDir}/${filenameBase}.pretty.json"
 
 # Beautify JSON file
+echo "Beautifying JSON file ${filename} to: ${filenameNew}"
 jq '.' ${filename} >${filenameNew}
 
 # Escape all forward slashses
-sed -i 's@/@\\/@g' ${filenameNew}
+if [ "$xflag" != "true" ]; then
+  os_name=$(uname)
+  if [[ "$os_name" == "Darwin" ]]; then
+    sed -i '' -e 's@/@\\/@g' ${filenameNew}
+  else
+    sed -i 's@/@\\/@g' ${filenameNew}
+  fi
+fi
